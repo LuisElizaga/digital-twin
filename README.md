@@ -1,35 +1,58 @@
 # AI Digital Twin
 
-An AI-powered digital twin chatbot that simulates your personality using OpenAI's GPT-4o-mini with persistent conversation memory.
+An AI-powered digital twin chatbot that simulates your personality using AWS Bedrock with persistent conversation memory, deployed on AWS infrastructure via Terraform.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.0-black?logo=next.js)
 ![React](https://img.shields.io/badge/React-19.2-blue?logo=react)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Python-green?logo=fastapi)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![AWS](https://img.shields.io/badge/AWS-Bedrock-orange?logo=amazon-aws)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-purple?logo=terraform)
 
 ## 🎯 Features
 
-- 💬 **Real-time AI Chat** - Conversational interface powered by GPT-4o-mini
-- 🧠 **Persistent Memory** - Conversations are saved and can be resumed
-- 🎭 **Customizable Personality** - Define your twin's personality via `me.txt`
+- 💬 **Real-time AI Chat** - Conversational interface powered by AWS Bedrock (Nova Lite)
+- 🧠 **Persistent Memory** - Conversations saved in S3 with session management
+- 🎭 **Customizable Personality** - Define your twin's personality via data files
 - 🎨 **Modern UI** - Built with Next.js 16, React 19, and Tailwind CSS 4
-- 📦 **Session Management** - Multiple conversation sessions support
-- ⚡ **Fast & Responsive** - Optimized with async operations
+- ☁️ **AWS Serverless** - Lambda, API Gateway, S3, and CloudFront
+- 🚀 **Infrastructure as Code** - Automated deployment with Terraform
+- 🌐 **Production Ready** - Multi-environment support (dev, test, prod)
 
 ## 🏗️ Architecture
 
 ```
-TWIN/
-├── frontend/          # Next.js 16 + React 19 + TypeScript + Tailwind 4
-├── backend/           # FastAPI (Python) + OpenAI API
-├── memory/            # Persistent conversation storage (JSON)
-└── week2/             # Course documentation
+┌─────────────────┐
+│   CloudFront    │ ← CDN Distribution
+│   (Frontend)    │
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│   S3 Bucket     │ ← Static Website (Next.js)
+│   (Frontend)    │
+└─────────────────┘
+         │
+         │ API Calls
+         │
+┌────────▼────────┐
+│  API Gateway    │ ← REST API
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│  Lambda         │ ← FastAPI + Mangum
+│  (Python)       │
+└────┬────────┬───┘
+     │        │
+     │        └────────────┐
+┌────▼────────┐   ┌───────▼────────┐
+│ AWS Bedrock │   │   S3 Bucket    │
+│ (Nova Lite) │   │   (Memory)     │
+└─────────────┘   └────────────────┘
 ```
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Next.js 16.0.0** (App Router)
+- **Next.js 16.0.0** (App Router, Static Export)
 - **React 19.2.0**
 - **TypeScript 5**
 - **Tailwind CSS 4**
@@ -37,18 +60,34 @@ TWIN/
 
 ### Backend
 - **FastAPI** (Python web framework)
-- **OpenAI API** (GPT-4o-mini)
-- **Python 3.10+**
-- **uvicorn** (ASGI server)
+- **AWS Bedrock** (Nova Lite model)
+- **Mangum** (ASGI adapter for Lambda)
+- **Python 3.12**
+- **boto3** (AWS SDK)
+
+### Infrastructure
+- **Terraform** (Infrastructure as Code)
+- **AWS Lambda** (Serverless compute)
+- **AWS API Gateway** (REST API)
+- **AWS S3** (Static hosting + memory storage)
+- **AWS CloudFront** (CDN)
+- **AWS IAM** (Permissions)
 
 ## 📋 Prerequisites
 
+### Local Development
 - **Node.js** >= 20.9.0 (for Next.js 16)
-- **Python** >= 3.10
-- **OpenAI API Key** ([Get one here](https://platform.openai.com/api-keys))
-- **npm** or **yarn** or **pnpm**
+- **Python** >= 3.12
+- **uv** (Python package manager)
+- **Docker** (for Lambda package building)
 
-## 🚀 Getting Started
+### AWS Deployment
+- **AWS CLI** configured with credentials
+- **Terraform** >= 1.0
+- **AWS Account** with Bedrock access enabled
+- **S3 bucket** for Terraform state (optional)
+
+## 🚀 Quick Start
 
 ### 1. Clone the Repository
 
@@ -57,226 +96,387 @@ git clone https://github.com/LuisElizaga/TWIN.git
 cd TWIN
 ```
 
-### 2. Backend Setup
+### 2. Local Development Setup
 
-#### Install Dependencies
+#### Backend Setup
 
 ```bash
 cd backend
 
-# Create virtual environment
-python -m venv .venv
+# Install uv if not already installed
+# curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Activate virtual environment
-# On Linux/Mac:
-source .venv/bin/activate
-# On Windows:
-# .venv\Scripts\activate
+# Install dependencies
+uv sync
 
-# Install packages
-pip install -r requirements.txt
+# Configure data files (see Data Configuration section)
+# Edit data/facts.json, data/style.txt, data/summary.txt
+# Add data/linkedin.pdf
+
+# Run the server
+uv run uvicorn server:app --reload
 ```
 
-#### Configure Environment Variables
+Backend API: `http://localhost:8000`
+API Docs: `http://localhost:8000/docs`
 
-Create a `.env` file in the `backend/` directory:
-
-```bash
-# backend/.env
-OPENAI_API_KEY=sk-your-api-key-here
-CORS_ORIGINS=http://localhost:3000
-```
-
-#### Create Your Twin's Personality
-
-Create a `me.txt` file in the `backend/` directory with your twin's personality description:
-
-```bash
-# backend/me.txt
-You are a helpful AI assistant with expertise in software development...
-(Add your personality description here)
-```
-
-#### Run the Backend Server
-
-```bash
-# From backend/ directory
-python server.py
-
-# Or with uvicorn directly:
-uvicorn server:app --reload --host 0.0.0.0 --port 8000
-```
-
-The backend API will be available at: `http://localhost:8000`
-
-**API Documentation:** `http://localhost:8000/docs`
-
----
-
-### 3. Frontend Setup
-
-#### Install Dependencies
+#### Frontend Setup
 
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
-```
 
-#### Run the Development Server
-
-```bash
+# Run development server
 npm run dev
 ```
 
-The frontend will be available at: `http://localhost:3000`
+Frontend: `http://localhost:3000`
 
 ---
 
-## 📡 API Endpoints
+## ☁️ AWS Deployment with Terraform
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | API information |
-| `/health` | GET | Health check |
-| `/chat` | POST | Send message to the AI twin |
-| `/sessions` | GET | List all conversation sessions |
+### Initial Setup
 
-### Example Chat Request
+1. **Configure AWS CLI**
+```bash
+aws configure
+# Enter your AWS Access Key ID, Secret Access Key, and region
+```
+
+2. **Enable AWS Bedrock Models**
+- Go to AWS Console → Bedrock → Model access
+- Request access to Amazon Nova models (especially `amazon.nova-lite-v1:0`)
+
+3. **Review Terraform Variables**
+
+Edit `terraform/terraform.tfvars`:
+```hcl
+project_name = "twin"
+environment  = "dev"
+aws_region   = "us-east-1"
+
+# Optional: Custom domain
+use_custom_domain = false
+root_domain      = ""  # e.g., "example.com"
+```
+
+### Deploy to AWS
 
 ```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "Hello, who are you?",
-    "session_id": null
-  }'
+# Deploy to dev environment
+./scripts/deploy.sh dev
+
+# Deploy to production
+./scripts/deploy.sh prod
 ```
 
-### Response
+The deployment script will:
+1. 📦 Build Lambda deployment package with Docker
+2. 🏗️ Initialize and apply Terraform infrastructure
+3. 🚀 Build and deploy Next.js frontend to S3
+4. 🌐 Output CloudFront and API Gateway URLs
 
-```json
-{
-  "response": "I'm your AI Digital Twin...",
-  "session_id": "uuid-session-id"
-}
-```
-
-## 🎨 Frontend Scripts
+### Destroy Infrastructure
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
+# Destroy dev environment
+./scripts/destroy.sh dev
+
+# Destroy production (with confirmation)
+./scripts/destroy.sh prod
 ```
 
-## 🐍 Backend Scripts
-
-```bash
-python server.py                      # Run server
-uvicorn server:app --reload           # Run with hot reload
-uvicorn server:app --host 0.0.0.0    # Expose to network
-```
+---
 
 ## 📁 Project Structure
 
 ```
 TWIN/
 ├── backend/
-│   ├── server.py              # FastAPI application
-│   ├── me.txt                 # Personality definition (not in repo)
-│   ├── .env                   # Environment variables (not in repo)
-│   ├── requirements.txt       # Python dependencies
-│   └── pyproject.toml         # Python project config
+│   ├── data/                  # Personality configuration
+│   │   ├── facts.json        # Personal information (JSON)
+│   │   ├── linkedin.pdf      # LinkedIn profile export
+│   │   ├── style.txt         # Communication style notes
+│   │   └── summary.txt       # Summary notes
+│   ├── server.py             # FastAPI application
+│   ├── lambda_handler.py     # AWS Lambda entry point
+│   ├── context.py            # Prompt context generation
+│   ├── resources.py          # Data loading utilities
+│   ├── deploy.py             # Lambda package builder
+│   ├── requirements.txt      # Python dependencies
+│   └── pyproject.toml        # UV project configuration
 │
 ├── frontend/
 │   ├── app/
-│   │   ├── page.tsx           # Main page
-│   │   ├── layout.tsx         # Root layout
-│   │   └── globals.css        # Global styles
+│   │   ├── page.tsx          # Main page
+│   │   ├── layout.tsx        # Root layout
+│   │   └── globals.css       # Global styles
 │   ├── components/
-│   │   └── twin.tsx           # Chat component
-│   ├── public/                # Static assets
-│   └── package.json           # Node dependencies
+│   │   └── twin.tsx          # Chat component
+│   ├── next.config.ts        # Next.js configuration
+│   └── package.json          # Node dependencies
 │
-├── memory/                    # Conversation storage (not in repo)
-├── .gitignore                 # Git ignore rules
-└── README.md                  # This file
+├── terraform/
+│   ├── main.tf               # Main infrastructure definition
+│   ├── variables.tf          # Input variables
+│   ├── outputs.tf            # Output values
+│   ├── versions.tf           # Provider versions
+│   └── terraform.tfvars      # Variable values
+│
+├── scripts/
+│   ├── deploy.sh             # Deployment automation
+│   └── destroy.sh            # Cleanup automation
+│
+├── memory/                   # Local conversation storage
+├── .gitignore                # Git ignore rules
+└── README.md                 # This file
 ```
 
-## 🔒 Security Notes
+## 🎭 Data Configuration
 
-**Files excluded from Git (sensitive data):**
-- `backend/.env` - API keys and secrets
-- `backend/me.txt` - Personal personality description
+The AI twin's personality is defined through data files in `backend/data/`:
+
+### `facts.json` - Structured Personal Data
+```json
+{
+  "full_name": "Your Name",
+  "name": "Nick",
+  "current_role": "Your Role",
+  "location": "City/Country",
+  "email": "your@email.com",
+  "linkedin": "linkedin.com/in/yourprofile",
+  "specialties": ["Skill1", "Skill2", "Skill3"],
+  "years_experience": 15,
+  "education": [
+    {
+      "degree": "Your Degree",
+      "institution": "University Name",
+      "year": "2020"
+    }
+  ]
+}
+```
+
+### `linkedin.pdf` - Professional Profile
+Export your LinkedIn profile as PDF and place it here. The system extracts text for context.
+
+### `style.txt` - Communication Style
+```
+Describe your communication style:
+- Tone (professional, casual, friendly)
+- Preferred language patterns
+- Common phrases or expressions
+- Any specific mannerisms
+```
+
+### `summary.txt` - Additional Context
+```
+Additional notes about yourself:
+- Career highlights
+- Project experiences
+- Technical expertise
+- Personal interests
+- Goals and aspirations
+```
+
+## 📡 API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | API information and status |
+| `/health` | GET | Health check |
+| `/chat` | POST | Send message to AI twin |
+| `/conversation/{session_id}` | GET | Retrieve conversation history |
+
+### Example Chat Request
+
+```bash
+curl -X POST https://your-api.execute-api.us-east-1.amazonaws.com/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Hello, tell me about your experience",
+    "session_id": null
+  }'
+```
+
+### Response
+```json
+{
+  "response": "Hello! I'm Luis, an AI and Cloud Platform Specialist...",
+  "session_id": "uuid-session-id"
+}
+```
+
+## ⚙️ Environment Variables
+
+### Backend (Local Development)
+Create `backend/.env`:
+```bash
+# AWS Configuration
+DEFAULT_AWS_REGION=us-east-1
+BEDROCK_MODEL_ID=amazon.nova-lite-v1:0
+
+# Storage Configuration
+USE_S3=false                # Use local storage for development
+MEMORY_DIR=../memory        # Local memory directory
+
+# CORS (optional)
+CORS_ORIGINS=http://localhost:3000
+```
+
+### Backend (AWS Lambda)
+Configured via Terraform, but can be overridden in AWS Console:
+```bash
+USE_S3=true
+S3_BUCKET=twin-dev-memory-{account-id}
+DEFAULT_AWS_REGION=us-east-1
+BEDROCK_MODEL_ID=amazon.nova-lite-v1:0
+CORS_ORIGINS=*
+```
+
+### Frontend
+Create `frontend/.env.local` for development:
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+For production, this is set automatically during deployment.
+
+## 🔧 AWS Bedrock Model Options
+
+Available models (configure via `BEDROCK_MODEL_ID`):
+- `amazon.nova-micro-v1:0` - Fastest, lowest cost
+- `amazon.nova-lite-v1:0` - Balanced (default)
+- `amazon.nova-pro-v1:0` - Most capable, higher cost
+
+**Note:** Some regions require `us.` or `eu.` prefix (e.g., `us.amazon.nova-lite-v1:0`)
+
+## 🔒 Security & Privacy
+
+### Files Excluded from Git
+- `backend/.env` - Environment variables
+- `backend/data/*.pdf` - Personal documents
 - `memory/*.json` - Conversation history
-- `backend/__pycache__/` - Python cache
-- `backend/.venv/` - Virtual environment
+- `terraform/*.tfstate` - Terraform state files
+- `terraform/.terraform/` - Terraform cache
+- `backend/.venv/` - Python virtual environment
 - `frontend/node_modules/` - Node dependencies
-- `frontend/.next/` - Next.js build cache
 
-**Important:** Never commit your OpenAI API key or personal data to version control.
-
-## 🎓 Use Cases
-
-- **AI Course Companion** - Learning assistant for AI deployment
-- **Personal AI Assistant** - Customized chatbot with your personality
-- **Customer Support** - Template for AI-powered support systems
-- **Conversational AI Demo** - Showcase of modern AI chat implementation
+### AWS Security Best Practices
+- ✅ S3 buckets have public access blocked (except frontend)
+- ✅ Lambda has minimal IAM permissions
+- ✅ API Gateway uses CORS configuration
+- ✅ CloudFront provides HTTPS encryption
+- ✅ Conversation data stored in private S3 bucket
 
 ## 🧪 Testing
 
-### Test Backend
-
+### Local Backend Testing
 ```bash
-# Check health
+# Health check
 curl http://localhost:8000/health
 
-# Test chat endpoint
+# Test chat
 curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello", "session_id": null}'
 ```
 
-### Test Frontend
+### Production Testing
+```bash
+# Get API URL from Terraform output
+cd terraform
+terraform output api_gateway_url
 
-1. Open `http://localhost:3000`
-2. Type a message in the chat input
-3. Verify the AI responds
-4. Check that conversation persists (same session)
+# Test health endpoint
+curl https://your-api-url.amazonaws.com/health
+
+# Test chat endpoint
+curl -X POST https://your-api-url.amazonaws.com/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello", "session_id": null}'
+```
 
 ## 🐛 Troubleshooting
 
-### Backend Issues
+### Lambda Issues
 
-**Error: `openai.OpenAIError: The api_key client option must be set`**
-- Solution: Set `OPENAI_API_KEY` in `backend/.env`
+**Error: "AccessDeniedException: User is not authorized to perform: bedrock:InvokeModel"**
+- **Solution**: Enable Bedrock model access in AWS Console → Bedrock → Model access
 
-**Error: `ModuleNotFoundError: No module named 'fastapi'`**
-- Solution: Install dependencies with `pip install -r requirements.txt`
+**Error: "NoSuchBucket"**
+- **Solution**: Ensure `USE_S3=true` and `S3_BUCKET` is set correctly in Lambda environment variables
+
+**Error: "Module not found: mangum"**
+- **Solution**: Rebuild Lambda package: `cd backend && uv run deploy.py`
+
+### Terraform Issues
+
+**Error: "Backend configuration changed"**
+```bash
+cd terraform
+terraform init -reconfigure
+```
+
+**Error: "Resource already exists"**
+```bash
+# Import existing resource
+terraform import aws_s3_bucket.memory bucket-name
+```
 
 ### Frontend Issues
 
-**Error: `Node.js version ">=20.9.0" is required`**
-- Solution: Update Node.js to version 20 or higher
+**Build Error: "Cannot find module"**
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
 
-**Error: `Cannot connect to backend`**
-- Solution: Ensure backend is running on `http://localhost:8000`
+## 💰 Cost Estimation
+
+Approximate monthly AWS costs for low-medium usage:
+
+| Service | Usage | Est. Cost |
+|---------|-------|-----------|
+| Lambda | 100K requests/month | $0.20 |
+| API Gateway | 100K requests/month | $0.35 |
+| S3 | 5 GB storage + requests | $0.15 |
+| CloudFront | 10 GB data transfer | $0.85 |
+| Bedrock (Nova Lite) | 1M input + 100K output tokens | $0.20 |
+| **Total** | | **~$2/month** |
+
+**Note:** Actual costs depend on usage. AWS Free Tier may cover initial usage.
+
+## 🎓 Use Cases
+
+- **Professional AI Assistant** - Represent yourself with an AI twin
+- **Portfolio Project** - Showcase AI/Cloud engineering skills
+- **Learning Platform** - Study serverless architecture and AI integration
+- **Customer Support** - Template for AI-powered support bot
+- **Interview Tool** - Let recruiters interact with your AI twin
 
 ## 📚 Learning Resources
 
-This project was built as part of an AI in Production course. Key concepts covered:
-
-- Building production-ready AI applications
-- FastAPI backend development
-- Next.js frontend with Server Components
-- OpenAI API integration
-- Conversation memory management
-- Deployment strategies
+This project demonstrates:
+- ✅ AWS Serverless architecture (Lambda, API Gateway, S3)
+- ✅ Infrastructure as Code with Terraform
+- ✅ AWS Bedrock AI integration
+- ✅ Modern React/Next.js development
+- ✅ FastAPI backend design
+- ✅ CI/CD automation with shell scripts
+- ✅ Multi-environment deployment strategies
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## 📝 License
 
@@ -284,16 +484,26 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 👤 Author
 
-**Luis Elízaga**
+**Luis Elizaga**
 - GitHub: [@LuisElizaga](https://github.com/LuisElizaga)
 - Location: Bogotá, Colombia / Madrid, Spain
+- Role: AI & Cloud Platform Specialist
 
 ## 🙏 Acknowledgments
 
-- Built as part of the "AI in Production" course
-- Powered by OpenAI's GPT-4o-mini
+- Built as part of an AI in Production course
+- Powered by AWS Bedrock (Amazon Nova)
 - UI inspired by modern chat interfaces
+- Infrastructure automated with Terraform
 
 ---
 
 **⭐ If you find this project useful, please give it a star!**
+
+## 🔗 Related Projects
+
+- [AWS Serverless Application Model (SAM)](https://aws.amazon.com/serverless/sam/)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [AWS Bedrock Documentation](https://docs.aws.amazon.com/bedrock/)

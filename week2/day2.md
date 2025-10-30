@@ -769,6 +769,7 @@ This method is more reliable for larger packages and slower internet connections
     ]
 }
 ```
+arn:aws:s3:::twin-frontend-392455956954
 
 4. Click **Save changes**
 

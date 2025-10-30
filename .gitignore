@@ -1,30 +1,41 @@
-# Environment variables
-.env
-backend/.env
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.d/
+*.tfvars
+!terraform.tfvars
+!prod.tfvars
 
-# Personal files (DO NOT COMMIT)
-backend/me.txt
+# Lambda packages
+lambda-deployment*.zip
+lambda-package/
 
-# Memory/conversation files
+# Personal data files
+backend/data/*.pdf
+backend/data/facts.json
+backend/data/style.txt
+backend/data/summary.txt
 memory/*.json
 
-# Python
-backend/__pycache__/
-backend/.venv/
-backend/*.pyc
-backend/.python-version
-backend/uv.lock
+# Environment files
+.env
+.env.*
 
 # Node
-frontend/node_modules/
-frontend/.next/
-frontend/next-env.d.ts
-frontend/package-lock.json
+node_modules/
+out/
+.next/
 
-# OS
-.DS_Store
-Thumbs.db
+# Python
+__pycache__/
+*.pyc
+.venv/
+uv.lock
 
-# IDEs
+# IDE
 .vscode/
 .idea/
+*.swp
+.DS_Store
