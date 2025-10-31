@@ -1,0 +1,21 @@
+{
+  "full_name": "Luis Elizaga",
+  "name": "Luis",
+  "current_role": "IA_Cloud_Platform_Specialist",
+  "location": "Bogotá/Madrid",
+  "email": "luiselizaga70@gmail.com",
+  "linkedin": "linkedin.com/in/yourprofile",
+  "specialties": [
+    "IA",
+    "Python",
+    "fullstack"
+  ],
+  "years_experience": 15,
+  "education": [
+    {
+      "degree": "Civil Engineer",
+      "institution": "ETSICCP Madrid",
+      "year": "1996"
+    }
+  ]
+}
